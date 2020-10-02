@@ -1,0 +1,8 @@
+[package]
+name = "inline-c"
+version = "0.1.0"
+authors = ["Ivan Enderlin <ivan@mnt.io>"]
+edition = "2018"
+
+[dependencies]
+tempfile = "3.1"
