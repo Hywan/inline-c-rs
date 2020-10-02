@@ -1,3 +1,4 @@
+use inline_c_macro::c;
 use std::error::Error;
 use std::io::prelude::*;
 use std::process::Command;
@@ -40,6 +41,7 @@ pub fn run_c(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate as inline_c;
 
     #[test]
     fn test_run_c() {
@@ -61,5 +63,19 @@ int main() {
 
         assert_eq!(result.unwrap(), 0);
         assert_eq!(String::from_utf8_lossy(&stdout), "Hello, World!\n");
+    }
+
+    #[test]
+    fn test_c_macro() {
+        let (result, _stdout, _stderr) = c! {
+            int main() {
+                int x = 1;
+                int y = 2;
+
+                return x + y;
+            }
+        };
+
+        assert_eq!(result.unwrap(), 3);
     }
 }

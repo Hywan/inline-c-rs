@@ -6,3 +6,9 @@ edition = "2018"
 
 [dependencies]
 tempfile = "3.1"
+inline-c-macro = { path = "./macros/" }
+
+[workspace]
+members = [
+    "macros",
+]
