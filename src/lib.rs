@@ -63,11 +63,12 @@ int main() {
 
         assert_eq!(result.unwrap(), 0);
         assert_eq!(String::from_utf8_lossy(&stdout), "Hello, World!\n");
+        assert!(stderr.is_empty());
     }
 
     #[test]
     fn test_c_macro() {
-        let (result, _stdout, _stderr) = c! {
+        let (result, stdout, stderr) = c! {
             int main() {
                 int x = 1;
                 int y = 2;
@@ -77,5 +78,24 @@ int main() {
         };
 
         assert_eq!(result.unwrap(), 3);
+        assert!(stdout.is_empty());
+        assert!(stderr.is_empty());
+    }
+
+    #[test]
+    fn test_c_macro_with_include() {
+        let (result, stdout, stderr) = c! {
+            #include <stdio.h>
+
+            int main() {
+                printf("Hello, World!\n");
+
+                return 0;
+            }
+        };
+
+        assert_eq!(result.unwrap(), 0);
+        assert_eq!(String::from_utf8_lossy(&stdout), "Hello, World!\n");
+        assert!(stderr.is_empty());
     }
 }
