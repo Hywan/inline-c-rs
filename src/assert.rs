@@ -12,9 +12,9 @@ impl Assert {
     pub fn success(self) -> Self {
         if !self.output.status.success() {
             panic!(
-                "Unexpected failure.\ncode={}\nstderr=\n  ```\n{:?}\n```",
+                "Unexpected failure.\ncode={}\nstderr=\n> ```\n>  {}\n> ```\n",
                 self.output.status.code().unwrap_or(1),
-                self.output.stderr
+                String::from_utf8_lossy(&self.output.stderr).replace("\n", "\n> "),
             )
         }
 
