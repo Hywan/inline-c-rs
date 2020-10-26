@@ -2,22 +2,23 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 #[proc_macro]
-pub fn c(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn assert_c(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let input_as_string = reconstruct(input);
 
     quote!(
-        {
-            let mut stdout = Vec::new();
-            let mut stderr = Vec::new();
-            let result = inline_c::run_c(
-                #input_as_string,
-                &mut stdout,
-                &mut stderr
-            );
+        inline_c::run_c(#input_as_string).map_err(|e| panic!(e.to_string())).unwrap()
+    )
+    .into()
+}
 
-            (result, stdout, stderr)
-        }
+#[proc_macro]
+pub fn assert_cxx(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = TokenStream::from(input);
+    let input_as_string = reconstruct(input);
+
+    quote!(
+        inline_c::run_cxx(#input_as_string).map_err(|e| panic!(e.to_string())).unwrap()
     )
     .into()
 }

@@ -1,4 +1,7 @@
-pub use inline_c_macro::c;
+mod assert;
+
+pub use crate::assert::Assert;
+pub use inline_c_macro::{assert_c, assert_cxx};
 
 use std::env;
 use std::error::Error;
@@ -20,28 +23,15 @@ impl ToString for Language {
     }
 }
 
-pub fn run_c(
-    c_program: &str,
-    stdout: &mut Vec<u8>,
-    stderr: &mut Vec<u8>,
-) -> Result<i32, Box<dyn Error>> {
-    run(Language::C, c_program, stdout, stderr)
+pub fn run_c(c_program: &str) -> Result<Assert, Box<dyn Error>> {
+    run(Language::C, c_program)
 }
 
-pub fn run_cxx(
-    cxx_program: &str,
-    stdout: &mut Vec<u8>,
-    stderr: &mut Vec<u8>,
-) -> Result<i32, Box<dyn Error>> {
-    run(Language::CXX, cxx_program, stdout, stderr)
+pub fn run_cxx(cxx_program: &str) -> Result<Assert, Box<dyn Error>> {
+    run(Language::CXX, cxx_program)
 }
 
-fn run(
-    language: Language,
-    program: &str,
-    stdout: &mut Vec<u8>,
-    stderr: &mut Vec<u8>,
-) -> Result<i32, Box<dyn Error>> {
+fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> {
     let mut program_file = NamedTempFile::new()?;
     program_file.write(program.as_bytes())?;
 
@@ -51,6 +41,7 @@ fn run(
     let clang_output = Command::new("clang")
         .arg("-x")
         .arg(language.to_string())
+        .arg("-O2")
         .arg("-o")
         .arg(object_path)
         .arg(program_file.path())
@@ -58,18 +49,10 @@ fn run(
         .output()?;
 
     if !clang_output.status.success() {
-        *stdout = clang_output.stdout;
-        *stderr = clang_output.stderr;
-
-        return Ok(clang_output.status.code().unwrap_or(1));
+        return Ok(Assert::new(clang_output));
     }
 
-    let object_output = Command::new(object_path).output()?;
-
-    *stdout = object_output.stdout;
-    *stderr = object_output.stderr;
-
-    Ok(object_output.status.code().unwrap_or(1))
+    Ok(Assert::new(Command::new(object_path).output()?))
 }
 
 #[cfg(test)]
@@ -79,9 +62,7 @@ mod tests {
 
     #[test]
     fn test_run_c() {
-        let mut stdout = Vec::new();
-        let mut stderr = Vec::new();
-        let result = run_c(
+        run_c(
             r#"
 #include <stdio.h>
 
@@ -91,57 +72,51 @@ int main() {
   return 0;
 }
 "#,
-            &mut stdout,
-            &mut stderr,
-        );
-
-        assert_eq!(result.unwrap(), 0);
-        assert_eq!(String::from_utf8_lossy(&stdout), "Hello, World!\n");
-        assert!(stderr.is_empty());
+        )
+        .unwrap()
+        .success()
+        .stdout("Hello, World!\n")
+        .no_stderr();
     }
 
     #[test]
     fn test_run_cxx() {
-        let mut stdout = Vec::new();
-        let mut stderr = Vec::new();
-        let result = run_cxx(
+        run_cxx(
             r#"
-#include <stdio.h>
+    #include <stdio.h>
 
-int main() {
-  printf("Hello, World!\n");
+    int main() {
+      printf("Hello, World!\n");
 
-  return 0;
-}
-"#,
-            &mut stdout,
-            &mut stderr,
-        );
-
-        assert_eq!(result.unwrap(), 0);
-        assert_eq!(String::from_utf8_lossy(&stdout), "Hello, World!\n");
-        assert!(stderr.is_empty());
+      return 0;
+    }
+    "#,
+        )
+        .unwrap()
+        .success()
+        .stdout("Hello, World!\n")
+        .no_stderr();
     }
 
     #[test]
     fn test_c_macro() {
-        let (result, stdout, stderr) = c! {
+        (assert_c! {
             int main() {
                 int x = 1;
                 int y = 2;
 
                 return x + y;
             }
-        };
-
-        assert_eq!(result.unwrap(), 3);
-        assert!(stdout.is_empty());
-        assert!(stderr.is_empty());
+        })
+        .failure()
+        .code(3)
+        .no_stdout()
+        .no_stderr();
     }
 
     #[test]
     fn test_c_macro_with_include() {
-        let (result, stdout, stderr) = c! {
+        (assert_c! {
             #include <stdio.h>
 
             int main() {
@@ -149,10 +124,9 @@ int main() {
 
                 return 0;
             }
-        };
-
-        assert_eq!(result.unwrap(), 0);
-        assert_eq!(String::from_utf8_lossy(&stdout), "Hello, World!\n");
-        assert!(stderr.is_empty());
+        })
+        .success()
+        .stdout("Hello, World!\n")
+        .no_stderr();
     }
 }
