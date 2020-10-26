@@ -6,8 +6,6 @@ pub fn c(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let input_as_string = reconstruct(input);
 
-    println!("{}", input_as_string);
-
     quote!(
         {
             let mut stdout = Vec::new();

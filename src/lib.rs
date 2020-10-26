@@ -1,26 +1,60 @@
-use inline_c_macro::c;
+pub use inline_c_macro::c;
+
+use std::env;
 use std::error::Error;
 use std::io::prelude::*;
 use std::process::Command;
 use tempfile::NamedTempFile;
+
+enum Language {
+    C,
+    CXX,
+}
+
+impl ToString for Language {
+    fn to_string(&self) -> String {
+        match self {
+            Self::C => String::from("c"),
+            Self::CXX => String::from("c++"),
+        }
+    }
+}
 
 pub fn run_c(
     c_program: &str,
     stdout: &mut Vec<u8>,
     stderr: &mut Vec<u8>,
 ) -> Result<i32, Box<dyn Error>> {
-    let mut c_program_file = NamedTempFile::new()?;
-    c_program_file.write(c_program.as_bytes())?;
+    run(Language::C, c_program, stdout, stderr)
+}
+
+pub fn run_cxx(
+    cxx_program: &str,
+    stdout: &mut Vec<u8>,
+    stderr: &mut Vec<u8>,
+) -> Result<i32, Box<dyn Error>> {
+    run(Language::CXX, cxx_program, stdout, stderr)
+}
+
+fn run(
+    language: Language,
+    program: &str,
+    stdout: &mut Vec<u8>,
+    stderr: &mut Vec<u8>,
+) -> Result<i32, Box<dyn Error>> {
+    let mut program_file = NamedTempFile::new()?;
+    program_file.write(program.as_bytes())?;
 
     let object = NamedTempFile::new()?;
     let object_path = object.path();
 
     let clang_output = Command::new("clang")
         .arg("-x")
-        .arg("c")
+        .arg(language.to_string())
         .arg("-o")
         .arg(object_path)
-        .arg(c_program_file.path())
+        .arg(program_file.path())
+        .current_dir(env::var("CARGO_MANIFEST_DIR")?)
         .output()?;
 
     if !clang_output.status.success() {
@@ -48,6 +82,29 @@ mod tests {
         let mut stdout = Vec::new();
         let mut stderr = Vec::new();
         let result = run_c(
+            r#"
+#include <stdio.h>
+
+int main() {
+  printf("Hello, World!\n");
+
+  return 0;
+}
+"#,
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(result.unwrap(), 0);
+        assert_eq!(String::from_utf8_lossy(&stdout), "Hello, World!\n");
+        assert!(stderr.is_empty());
+    }
+
+    #[test]
+    fn test_run_cxx() {
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let result = run_cxx(
             r#"
 #include <stdio.h>
 
