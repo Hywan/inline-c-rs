@@ -33,69 +33,79 @@ fn reconstruct(input: TokenStream) -> String {
         match iterator.next() {
             Some(Punct(token)) => {
                 let token_value = token.as_char();
-                output.push(token_value);
 
                 match token_value {
-                    '#' => match iterator.peek() {
-                        Some(Ident(include)) if include.to_string() == "include".to_string() => {
-                            iterator.next();
+                    '#' => {
+                        output.push('\n');
+                        output.push(token_value);
 
-                            let opening;
-                            let closing;
+                        match iterator.peek() {
+                            Some(Ident(include))
+                                if include.to_string() == "include".to_string() =>
+                            {
+                                iterator.next();
 
-                            match iterator.next() {
-                                Some(Punct(punct)) => {
-                                    opening = punct.as_char();
+                                let opening;
+                                let closing;
 
-                                    if opening == '"' {
-                                        closing = '"';
-                                    } else {
-                                        closing = '>';
-                                    }
-                                }
-
-                                Some(token) => panic!(
-                                    "Invalid opening token after `#include`, received `{:?}`.",
-                                    token
-                                ),
-
-                                None => panic!("`#include` must be followed by `<` or `\"`."),
-                            }
-
-                            output.push_str("include");
-                            output.push(' ');
-                            output.push(opening);
-
-                            loop {
                                 match iterator.next() {
                                     Some(Punct(punct)) => {
-                                        let punct = punct.as_char();
+                                        opening = punct.as_char();
 
-                                        if punct == closing {
-                                            break;
+                                        if opening == '"' {
+                                            closing = '"';
+                                        } else {
+                                            closing = '>';
                                         }
-
-                                        output.push(punct)
                                     }
-                                    Some(Ident(ident)) => output.push_str(&ident.to_string()),
-                                    token => panic!(
-                                        "Invalid token in `#include` value, with `{:?}`.",
+
+                                    Some(token) => panic!(
+                                        "Invalid opening token after `#include`, received `{:?}`.",
                                         token
                                     ),
+
+                                    None => panic!("`#include` must be followed by `<` or `\"`."),
                                 }
+
+                                output.push_str("include");
+                                output.push(' ');
+                                output.push(opening);
+
+                                loop {
+                                    match iterator.next() {
+                                        Some(Punct(punct)) => {
+                                            let punct = punct.as_char();
+
+                                            if punct == closing {
+                                                break;
+                                            }
+
+                                            output.push(punct)
+                                        }
+                                        Some(Ident(ident)) => output.push_str(&ident.to_string()),
+                                        token => panic!(
+                                            "Invalid token in `#include` value, with `{:?}`.",
+                                            token
+                                        ),
+                                    }
+                                }
+
+                                output.push(closing);
+                                output.push('\n');
                             }
 
-                            output.push(closing);
-                            output.push('\n');
+                            _ => (),
                         }
-                        _ => {}
-                    },
+                    }
 
                     ';' => {
+                        output.push(token_value);
                         output.push('\n');
                     }
 
                     _ => {
+                        output.push(token_value);
+
                         if token.spacing() == Spacing::Alone {
                             output.push(' ');
                         }

@@ -3,6 +3,9 @@ mod assert;
 pub use crate::assert::Assert;
 pub use inline_c_macro::{assert_c, assert_cxx};
 
+use lazy_static::lazy_static;
+use regex::Regex;
+use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::io::prelude::*;
@@ -32,6 +35,23 @@ pub fn run_cxx(cxx_program: &str) -> Result<Assert, Box<dyn Error>> {
 }
 
 fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> {
+    lazy_static! {
+        static ref REGEX: Regex =
+            Regex::new(r#"#inline_c_rs (?P<variable_name>[^:]+):\s*"(?P<variable_value>[^"]+)"\n"#)
+                .unwrap();
+    }
+
+    let mut variables = HashMap::new();
+
+    for captures in REGEX.captures_iter(program) {
+        variables.insert(
+            String::from(captures["variable_name"].trim()),
+            String::from(&captures["variable_value"]),
+        );
+    }
+
+    let program = &REGEX.replace_all(program, "");
+
     let mut program_file = NamedTempFile::new()?;
     program_file.write(program.as_bytes())?;
 
@@ -45,6 +65,7 @@ fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> {
         .arg("-o")
         .arg(object_path)
         .arg(program_file.path())
+        .envs(variables.clone())
         .current_dir(env::var("CARGO_MANIFEST_DIR")?)
         .output()?;
 
@@ -52,7 +73,9 @@ fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> {
         return Ok(Assert::new(clang_output));
     }
 
-    Ok(Assert::new(Command::new(object_path).output()?))
+    Ok(Assert::new(
+        Command::new(object_path).envs(variables).output()?,
+    ))
 }
 
 #[cfg(test)]
@@ -67,9 +90,9 @@ mod tests {
 #include <stdio.h>
 
 int main() {
-  printf("Hello, World!\n");
+    printf("Hello, World!\n");
 
-  return 0;
+    return 0;
 }
 "#,
         )
@@ -83,14 +106,14 @@ int main() {
     fn test_run_cxx() {
         run_cxx(
             r#"
-    #include <stdio.h>
+#include <stdio.h>
 
-    int main() {
-      printf("Hello, World!\n");
+int main() {
+    printf("Hello, World!\n");
 
-      return 0;
-    }
-    "#,
+    return 0;
+}
+"#,
         )
         .unwrap()
         .success()
@@ -127,6 +150,33 @@ int main() {
         })
         .success()
         .stdout("Hello, World!\n")
+        .no_stderr();
+    }
+
+    #[test]
+    fn test_c_macro_with_inline_c_rs() {
+        (assert_c! {
+            #inline_c_rs LDFLAGS: "-lfoo"
+            #inline_c_rs FOO: "bar baz qux"
+            #include <stdio.h>
+            #include <stdlib.h>
+
+            int main() {
+                const char* foo = getenv("FOO");
+
+                if (NULL == foo) {
+                    printf("FOO is not set\n");
+
+                    return 1;
+                }
+
+                printf("FOO is set to `%s`\n", foo);
+
+                return 0;
+            }
+        })
+        .success()
+        .stdout("FOO is set to `bar baz qux`\n")
         .no_stderr();
     }
 }
