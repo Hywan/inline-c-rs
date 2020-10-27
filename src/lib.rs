@@ -163,20 +163,23 @@ int main() {
 
             int main() {
                 const char* foo = getenv("FOO");
+                const char* ldflags = getenv("LDFLAGS");
 
-                if (NULL == foo) {
-                    printf("FOO is not set\n");
-
+                if (NULL == foo || NULL == ldflags) {
                     return 1;
                 }
 
                 printf("FOO is set to `%s`\n", foo);
+                printf("LDFLAGS is set to `%s`\n", ldflags);
 
                 return 0;
             }
         })
         .success()
-        .stdout("FOO is set to `bar baz qux`\n")
+        .stdout(
+            "FOO is set to `bar baz qux`\n\
+             LDFLAGS is set to `-lfoo`\n",
+        )
         .no_stderr();
     }
 }
