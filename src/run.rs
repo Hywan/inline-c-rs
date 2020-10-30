@@ -23,6 +23,8 @@ impl ToString for Language {
     }
 }
 
+const ENV_VAR_PREFIX: &'static str = "INLINE_C_RS_";
+
 pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> {
     lazy_static! {
         static ref REGEX: Regex =
@@ -31,6 +33,16 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     }
 
     let mut variables = HashMap::new();
+
+    for (variable_name, variable_value) in env::vars().filter_map(|(mut name, value)| {
+        if name.starts_with(ENV_VAR_PREFIX) {
+            Some((name.split_off(ENV_VAR_PREFIX.len()), value))
+        } else {
+            None
+        }
+    }) {
+        variables.insert(variable_name, variable_value);
+    }
 
     for captures in REGEX.captures_iter(program) {
         variables.insert(

@@ -9,6 +9,7 @@ pub use inline_c_macro::{assert_c, assert_cxx};
 mod tests {
     use super::*;
     use crate as inline_c;
+    use std::env::{remove_var, set_var};
 
     #[test]
     fn test_c_macro() {
@@ -43,10 +44,12 @@ mod tests {
     }
 
     #[test]
-    fn test_c_macro_with_inline_c_rs() {
+    fn test_c_macro_with_env_vars_inlined() {
         (assert_c! {
+            // Those are env variables.
             #inline_c_rs LDFLAGS: "-lfoo"
             #inline_c_rs FOO: "bar baz qux"
+
             #include <stdio.h>
             #include <stdlib.h>
 
@@ -70,5 +73,40 @@ mod tests {
              LDFLAGS is set to `-lfoo`\n",
         )
         .no_stderr();
+    }
+
+    #[test]
+    fn test_c_macro_with_env_vars_from_env_vars() {
+        // Define env vars through env vars.
+        set_var("INLINE_C_RS_FOO", "bar baz qux");
+        set_var("INLINE_C_RS_LDFLAGS", "-lfoo");
+
+        (assert_c! {
+            #include <stdio.h>
+            #include <stdlib.h>
+
+            int main() {
+                const char* foo = getenv("FOO");
+                const char* ldflags = getenv("LDFLAGS");
+
+                if (NULL == foo || NULL == ldflags) {
+                    return 1;
+                }
+
+                printf("FOO is set to `%s`\n", foo);
+                printf("LDFLAGS is set to `%s`\n", ldflags);
+
+                return 0;
+            }
+        })
+        .success()
+        .stdout(
+            "FOO is set to `bar baz qux`\n\
+             LDFLAGS is set to `-lfoo`\n",
+        )
+        .no_stderr();
+
+        remove_var("INLINE_C_RS_FOO");
+        remove_var("INLINE_C_RS_LDFLAGS");
     }
 }
