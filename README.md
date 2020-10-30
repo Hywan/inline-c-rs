@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="./doc/lilac.jpg" alt="Lilac-breated Roller, by David Clode" /><br />
+  <img src="./doc/lilac.jpg" alt="Lilac-breated Roller, by David Clode" width="400px" /><br />
   inline-c
 </h1>
 
