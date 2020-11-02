@@ -7,7 +7,7 @@ pub fn assert_c(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input_as_string = reconstruct(input);
 
     quote!(
-        inline_c::run(Language::C, #input_as_string).map_err(|e| panic!(e.to_string())).unwrap()
+        inline_c::run(inline_c::Language::C, #input_as_string).map_err(|e| panic!(e.to_string())).unwrap()
     )
     .into()
 }
@@ -18,7 +18,7 @@ pub fn assert_cxx(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input_as_string = reconstruct(input);
 
     quote!(
-        inline_c::run(Language::CXX, #input_as_string).map_err(|e| panic!(e.to_string())).unwrap()
+        inline_c::run(inline_c::Language::CXX, #input_as_string).map_err(|e| panic!(e.to_string())).unwrap()
     )
     .into()
 }
