@@ -45,18 +45,48 @@ fn reconstruct(input: TokenStream) -> String {
                             {
                                 iterator.next();
 
-                                let opening;
-                                let closing;
-
                                 match iterator.next() {
                                     Some(Punct(punct)) => {
-                                        opening = punct.as_char();
-
-                                        if opening == '"' {
-                                            closing = '"';
-                                        } else {
-                                            closing = '>';
+                                        if punct.as_char() != '<' {
+                                            panic!(
+                                                "Invalid opening token after `#include`, received `{:?}`.",
+                                                token
+                                            )
                                         }
+
+                                        output.push_str("include <");
+
+                                        loop {
+                                            match iterator.next() {
+                                                Some(Punct(punct)) => {
+                                                    let punct = punct.as_char();
+
+                                                    if punct == '>' {
+                                                        break;
+                                                    }
+
+                                                    output.push(punct)
+                                                }
+
+                                                Some(Ident(ident)) => {
+                                                    output.push_str(&ident.to_string())
+                                                }
+
+                                                token => panic!(
+                                                    "Invalid token in `#include` value, with `{:?}`.",
+                                                    token
+                                                ),
+                                            }
+                                        }
+
+                                        output.push('>');
+                                        output.push('\n');
+                                    }
+
+                                    Some(Literal(literal)) => {
+                                        output.push_str("include ");
+                                        output.push_str(&literal.to_string());
+                                        output.push('\n');
                                     }
 
                                     Some(token) => panic!(
@@ -66,32 +96,6 @@ fn reconstruct(input: TokenStream) -> String {
 
                                     None => panic!("`#include` must be followed by `<` or `\"`."),
                                 }
-
-                                output.push_str("include");
-                                output.push(' ');
-                                output.push(opening);
-
-                                loop {
-                                    match iterator.next() {
-                                        Some(Punct(punct)) => {
-                                            let punct = punct.as_char();
-
-                                            if punct == closing {
-                                                break;
-                                            }
-
-                                            output.push(punct)
-                                        }
-                                        Some(Ident(ident)) => output.push_str(&ident.to_string()),
-                                        token => panic!(
-                                            "Invalid token in `#include` value, with `{:?}`.",
-                                            token
-                                        ),
-                                    }
-                                }
-
-                                output.push(closing);
-                                output.push('\n');
                             }
 
                             _ => (),
