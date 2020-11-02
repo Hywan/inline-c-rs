@@ -59,15 +59,24 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let object = NamedTempFile::new()?;
     let object_path = object.path();
 
+    let language = language.to_string();
+    let output = object_path.to_string_lossy().to_string();
+    let input = program_file.path().to_string_lossy().to_string();
+    let mut arguments: Vec<String> = vec![
+        "-x".to_string(),
+        language,
+        "-O2".to_string(),
+        "-o".to_string(),
+        output,
+        input,
+    ];
+
+    add_compiler_flags(&mut arguments, &variables);
+
     let clang_output = Command::new("clang")
-        .arg("-x")
-        .arg(language.to_string())
-        .arg("-O2")
-        .arg("-o")
-        .arg(object_path)
-        .arg(program_file.path())
-        .envs(variables.clone())
+        .args(&arguments)
         .current_dir(env::var("CARGO_MANIFEST_DIR")?)
+        .envs(variables.clone())
         .output()?;
 
     if !clang_output.status.success() {
@@ -77,6 +86,23 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     Ok(Assert::new(
         Command::new(object_path).envs(variables).output()?,
     ))
+}
+
+fn add_compiler_flags(arguments: &mut Vec<String>, variables: &HashMap<String, String>) {
+    let get_env_flags = |env_name: &str| -> Vec<String> {
+        variables
+            .get(env_name)
+            .map(|e| e.to_string())
+            .ok_or_else(|| env::var(env_name))
+            .unwrap_or(String::new())
+            .split_ascii_whitespace()
+            .map(|slice| slice.to_string())
+            .collect()
+    };
+
+    arguments.extend(get_env_flags("CFLAGS"));
+    arguments.extend(get_env_flags("CPPFLAGS"));
+    arguments.extend(get_env_flags("CXXFLAGS"));
 }
 
 #[cfg(test)]
