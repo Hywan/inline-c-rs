@@ -103,6 +103,10 @@ fn add_compiler_flags(arguments: &mut Vec<String>, variables: &HashMap<String, S
     arguments.extend(get_env_flags("CFLAGS"));
     arguments.extend(get_env_flags("CPPFLAGS"));
     arguments.extend(get_env_flags("CXXFLAGS"));
+
+    for linker_argument in get_env_flags("LDFLAGS") {
+        arguments.push(format!("-Wl,{}", linker_argument));
+    }
 }
 
 #[cfg(test)]

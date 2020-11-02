@@ -47,22 +47,22 @@ mod tests {
     fn test_c_macro_with_env_vars_inlined() {
         (assert_c! {
             // Those are env variables.
-            #inline_c_rs LDFLAGS: "-lfoo"
             #inline_c_rs FOO: "bar baz qux"
+            #inline_c_rs HELLO: "World!"
 
             #include <stdio.h>
             #include <stdlib.h>
 
             int main() {
                 const char* foo = getenv("FOO");
-                const char* ldflags = getenv("LDFLAGS");
+                const char* hello = getenv("HELLO");
 
-                if (NULL == foo || NULL == ldflags) {
+                if (NULL == foo || NULL == hello) {
                     return 1;
                 }
 
                 printf("FOO is set to `%s`\n", foo);
-                printf("LDFLAGS is set to `%s`\n", ldflags);
+                printf("HELLO is set to `%s`\n", hello);
 
                 return 0;
             }
@@ -70,7 +70,7 @@ mod tests {
         .success()
         .stdout(
             "FOO is set to `bar baz qux`\n\
-             LDFLAGS is set to `-lfoo`\n",
+             HELLO is set to `World!`\n",
         )
         .no_stderr();
     }
@@ -79,7 +79,7 @@ mod tests {
     fn test_c_macro_with_env_vars_from_env_vars() {
         // Define env vars through env vars.
         set_var("INLINE_C_RS_FOO", "bar baz qux");
-        set_var("INLINE_C_RS_LDFLAGS", "-lfoo");
+        set_var("INLINE_C_RS_HELLO", "World!");
 
         (assert_c! {
             #include <stdio.h>
@@ -87,14 +87,14 @@ mod tests {
 
             int main() {
                 const char* foo = getenv("FOO");
-                const char* ldflags = getenv("LDFLAGS");
+                const char* hello = getenv("HELLO");
 
-                if (NULL == foo || NULL == ldflags) {
+                if (NULL == foo || NULL == hello) {
                     return 1;
                 }
 
                 printf("FOO is set to `%s`\n", foo);
-                printf("LDFLAGS is set to `%s`\n", ldflags);
+                printf("HELLO is set to `%s`\n", hello);
 
                 return 0;
             }
@@ -102,11 +102,11 @@ mod tests {
         .success()
         .stdout(
             "FOO is set to `bar baz qux`\n\
-             LDFLAGS is set to `-lfoo`\n",
+             HELLO is set to `World!`\n",
         )
         .no_stderr();
 
         remove_var("INLINE_C_RS_FOO");
-        remove_var("INLINE_C_RS_LDFLAGS");
+        remove_var("INLINE_C_RS_HELLO");
     }
 }

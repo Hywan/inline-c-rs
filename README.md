@@ -63,10 +63,14 @@ fn test_badly() {
 ### Define environment variables
 
 Now, let's enter the real reason to live of this project. Let's way we
-want a C program to link against a specific shared library. We may
-want to define a value for the `LDFLAGS` environment variable. First
-way is to use the `#inline_c_rs` C directive with the following
-syntax:
+want a C program to link against a specific shared library.
+
+> Note: The `CFLAGS`, `CXXFLAGS`, `CPPFLAGS` and `LDFLAGS` are
+> supported environment variables.
+
+Great! We may want to define a value for the `CFLAGS` and the
+`LDFLAGS` environment variables. First way is to use the
+`#inline_c_rs` C directive with the following syntax:
 
 ```
 #include_c_rs <variable_name>: "<variable_value>"
@@ -74,15 +78,16 @@ syntax:
 
 Please note the double quotes around the variable value.
 
-Let's see a concrete example. We declare 2 environment variables,
-resp. `FOO` and `LDFLAGS`. The C program prints their corresponding
-values, and exit accordingly.
+Let's see a concrete example. We declare 3 environment variables,
+resp. `FOO`, `CFLAGS` and `LDFLAGS`. The C program prints their
+corresponding values, and exit accordingly.
 
 ```rust
 #[test]
 fn test_c_macro_with_env_vars_inlined() {
     (assert_c! {
         #inline_c_rs FOO: "bar baz qux"
+        #inline_c_rs CFLAGs: "-Ixyz/include -Lzyx/lib"
         #inline_c_rs LDFLAGS: "-lfoo"
 
         #include <stdio.h>
@@ -90,23 +95,18 @@ fn test_c_macro_with_env_vars_inlined() {
 
         int main() {
             const char* foo = getenv("FOO");
-            const char* ldflags = getenv("LDFLAGS");
 
-            if (NULL == foo || NULL == ldflags) {
+            if (NULL == foo) {
                 return 1;
             }
 
             printf("FOO is set to `%s`\n", foo);
-            printf("LDFLAGS is set to `%s`\n", ldflags);
 
             return 0;
         }
     })
     .success()
-    .stdout(
-        "FOO is set to `bar baz qux`\n\
-         LDFLAGS is set to `-lfoo`\n",
-    )
+    .stdout("FOO is set to `bar baz qux`\n")
     .no_stderr();
 }
 ```
@@ -122,13 +122,15 @@ INLINE_C_RS_<variable_name>=<variable_value>
 ```
 
 Let's see it in action. We set 2 environments variables,
-resp. `INLINE_C_RS_FOO` and `INLINE_C_RS_LDFLAGS`, that will create
-`FOO` and `LDFLAGS` for this C program specifically:
+resp. `INLINE_C_RS_FOO`, `INLINE_C_RS_CFLAGS` and
+`INLINE_C_RS_LDFLAGS`, that will create `FOO`, `CFLAGS` and `LDFLAGS`
+for this C program specifically:
 
 ```rust
 #[test]
 fn test_c_macro_with_env_vars_from_env_vars() {
     set_var("INLINE_C_RS_FOO", "bar baz qux");
+    set_var("INLINE_C_RS_CFLAGS", "-Ixyz/include -Lxyz/lib");
     set_var("INLINE_C_RS_LDFLAGS", "-lfoo");
 
     (assert_c! {
@@ -137,26 +139,22 @@ fn test_c_macro_with_env_vars_from_env_vars() {
 
         int main() {
             const char* foo = getenv("FOO");
-            const char* ldflags = getenv("LDFLAGS");
 
-            if (NULL == foo || NULL == ldflags) {
+            if (NULL == foo) {
                 return 1;
             }
 
             printf("FOO is set to `%s`\n", foo);
-            printf("LDFLAGS is set to `%s`\n", ldflags);
 
             return 0;
         }
     })
     .success()
-    .stdout(
-        "FOO is set to `bar baz qux`\n\
-         LDFLAGS is set to `-lfoo`\n",
-    )
+    .stdout("FOO is set to `bar baz qux`\n")
     .no_stderr();
 
     remove_var("INLINE_C_RS_FOO");
+    remove_var("INLINE_C_RS_CFLAGS");
     remove_var("INLINE_C_RS_LDFLAGS");
 }
 ```
