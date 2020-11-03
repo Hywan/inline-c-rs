@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::{
     borrow::Cow, collections::HashMap, env, error::Error, ffi::OsString, io::prelude::*,
-    path::Path, process::Command,
+    path::PathBuf, process::Command,
 };
 
 pub enum Language {
@@ -34,7 +34,7 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
 
     let input_file = program_file.path();
     let output_temp = tempfile::Builder::new().tempfile()?;
-    let output_file = output_temp.path();
+    let (_, output_path) = output_temp.keep()?;
 
     let mut build = cc::Build::new();
     let mut build = build
@@ -65,7 +65,7 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     {
         let msvc = target.contains("msvc");
         let clang = compiler.is_like_clang();
-        command_add_output_file(&mut command, output_file, msvc, clang);
+        command_add_output_file(&mut command, &output_path, msvc, clang);
     }
 
     command.arg(input_file);
@@ -73,11 +73,12 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let clang_output = command.envs(variables.clone()).output()?;
 
     if !clang_output.status.success() {
-        return Ok(Assert::new(clang_output));
+        return Ok(Assert::new(clang_output, None));
     }
 
     Ok(Assert::new(
-        Command::new(output_file).envs(variables).output()?,
+        Command::new(output_path.clone()).envs(variables).output()?,
+        Some(output_path),
     ))
 }
 
@@ -115,13 +116,13 @@ fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap
 }
 
 // This is copy-pasted and edited from `cc-rs`.
-fn command_add_output_file(command: &mut Command, output_file: &Path, msvc: bool, clang: bool) {
+fn command_add_output_file(command: &mut Command, output_path: &PathBuf, msvc: bool, clang: bool) {
     if msvc && !clang {
         let mut string = OsString::from("-Fo");
-        string.push(&output_file);
+        string.push(output_path);
         command.arg(string);
     } else {
-        command.arg("-o").arg(&output_file);
+        command.arg("-o").arg(output_path);
     }
 }
 

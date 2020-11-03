@@ -1,12 +1,24 @@
-use std::process::Output;
+use std::{fs, path::PathBuf, process::Output};
 
 pub struct Assert {
     output: Output,
+    object_file: Option<PathBuf>,
+}
+
+impl Drop for Assert {
+    fn drop(&mut self) {
+        if let Some(object_file) = &self.object_file {
+            fs::remove_file(object_file).expect("Failed to remove the object file.");
+        }
+    }
 }
 
 impl Assert {
-    pub fn new(output: Output) -> Self {
-        Self { output }
+    pub fn new(output: Output, object_file: Option<PathBuf>) -> Self {
+        Self {
+            output,
+            object_file,
+        }
     }
 
     pub fn success(self) -> Self {
