@@ -10,6 +10,8 @@ tempfile = "3.1"
 inline-c-macro = { path = "./macros/" }
 regex = "1.4"
 lazy_static = "1.4"
+cc = "1.0"
+target-lexicon = "0.11"
 
 [workspace]
 members = [
