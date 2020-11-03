@@ -3,25 +3,24 @@
   inline-c
 </h1>
 
-Have you ever written a C API for your Rust program? Have you ever
-dreamed of running your C API directly in your Rust implementation,
-for example to unit test it? No? Because I did. Bah, I'm probably not
-the only one. Right? Please tell me I'm not the only one!
+Have you ever written a C API for your Rust program? I'm sure you did,
+otherwise what are you waiting for? It's fun! Have you ever dreamed
+of running your C API directly in your Rust implementation, for
+example to unit test it? Nah? Because I did. Bah, I'm probably not the
+only one. Right? Please tell me I'm not.
 
-The `inline-c` crate is a really immature project that allows you to
-write C code within Rust directly, to compile it and to run some
-assertions.
-
-Please, do not use this crate for evil purposes. Stay reasonable. The
-main idea is to _test_ a C API, for instance of a Rust program that is
-automatically generated with [`cbindgen`].
+The `inline-c` crate allows you to write C code within Rust directly,
+to compile it and to run some assertions. Note that C and Rust are
+fully sandboxed, values cannot be exchanged between the two. The
+purpose of `inline-c` is to ease the testing of a C API, that is for
+example automatically generated with [`cbindgen`].
 
 ## Example
 
 ### The `assert_c!` and `assert_cxx!` macros
 
 Basic usage of the `assert_c!` (or `assert_cxx!`) macro. In the
-following example a simple Hello, World! C program is compiled and
+following example a simple _Hello, World!_ C program is compiled and
 executed. It is then asserted than the exit code and the outputs are
 correct. The next example asserts than the C program correctly returns
 an error.
