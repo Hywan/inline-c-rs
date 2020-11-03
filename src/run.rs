@@ -16,7 +16,7 @@ impl ToString for Language {
     fn to_string(&self) -> String {
         match self {
             Self::C => String::from("c"),
-            Self::Cxx => String::from("c++"),
+            Self::Cxx => String::from("cpp"),
         }
     }
 }
