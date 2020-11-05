@@ -51,4 +51,4 @@ jobs:
         shell: bash
         run: |
           cargo build --release
-          RUST_BACKTRACE=1 cargo test --release -- --nocapture test_run_cxx
+          RUST_BACKTRACE=1 cargo test --release -- --nocapture test_run_c
