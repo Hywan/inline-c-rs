@@ -73,11 +73,15 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let clang_output = command.envs(variables.clone()).output()?;
 
     if !clang_output.status.success() {
-        return Ok(Assert::new(clang_output, None));
+        return Ok(Assert::new(format!("{:?}", command), clang_output, None));
     }
 
+    let mut command = Command::new(output_path.clone());
+    command.envs(variables);
+
     Ok(Assert::new(
-        Command::new(output_path.clone()).envs(variables).output()?,
+        format!("{:?}", command),
+        command.output()?,
         Some(output_path),
     ))
 }

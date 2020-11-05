@@ -1,6 +1,7 @@
 use std::{fs, path::PathBuf, process::Output};
 
 pub struct Assert {
+    command: String,
     output: Output,
     object_file: Option<PathBuf>,
 }
@@ -14,8 +15,9 @@ impl Drop for Assert {
 }
 
 impl Assert {
-    pub fn new(output: Output, object_file: Option<PathBuf>) -> Self {
+    pub fn new(command: String, output: Output, object_file: Option<PathBuf>) -> Self {
         Self {
+            command,
             output,
             object_file,
         }
@@ -24,7 +26,8 @@ impl Assert {
     pub fn success(self) -> Self {
         if !self.output.status.success() {
             panic!(
-                "Unexpected failure.\ncode={}\nstderr=\n> ```\n>  {}\n> ```\n",
+                "Unexpected failure.\ncommand=`{}`\ncode=`{}`\nstderr=\n> ```\n>  {}\n> ```\n",
+                self.command,
                 self.output.status.code().unwrap_or(1),
                 String::from_utf8_lossy(&self.output.stderr).replace("\n", "\n> "),
             )
