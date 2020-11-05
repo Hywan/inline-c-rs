@@ -1,7 +1,14 @@
 [package]
 name = "inline-c-macro"
 version = "0.1.0"
+description = "The macros for the `inline-c` crate, that allows to write and execute C code inside Rust"
+license = "BSD-3-Clause"
 authors = ["Ivan Enderlin <ivan@mnt.io>"]
+repository = "https://github.com/Hywan/inline-c-rs"
+homepage = "https://github.com/Hywan/inline-c-rs"
+readme = "README.md"
+categories = ["development-tools::testing"]
+keywords = ["test", "c", "cpp"]
 edition = "2018"
 
 [lib]
