@@ -51,4 +51,4 @@ jobs:
         shell: bash
         run: |
           cargo build --release
-          cargo test --release -- --nocapture
+          cargo test --release -- --nocapture test_run_cxx
