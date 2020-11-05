@@ -26,9 +26,10 @@ impl Assert {
     pub fn success(self) -> Self {
         if !self.output.status.success() {
             panic!(
-                "Unexpected failure.\ncommand=`{}`\ncode=`{}`\nstderr=\n> ```\n>  {}\n> ```\n",
+                "Unexpected failure.\ncommand=`{}`\ncode=`{}`\nstdout=\n> ```\n>  {}\n>```\nstderr=\n> ```\n>  {}\n> ```\n",
                 self.command,
                 self.output.status.code().unwrap_or(1),
+                String::from_utf8_lossy(&self.output.stdout).replace("\n", "\n> "),
                 String::from_utf8_lossy(&self.output.stderr).replace("\n", "\n> "),
             )
         }
