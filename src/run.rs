@@ -43,8 +43,6 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
 
     let (_, output_path) = output_temp.tempfile()?.keep()?;
 
-    dbg!(&output_path);
-
     let mut build = cc::Build::new();
     let mut build = build
         .cargo_metadata(false)
@@ -79,8 +77,6 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
 
     command.arg(&input_file);
     command.envs(variables.clone());
-
-    dbg!(&command);
 
     let clang_output = command.output()?;
 

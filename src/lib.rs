@@ -8,6 +8,7 @@ pub mod predicates {
 
 #[cfg(test)]
 mod tests {
+    use super::predicates::*;
     use super::*;
     use crate as inline_c;
     use std::env::{remove_var, set_var};
@@ -38,7 +39,7 @@ mod tests {
             }
         })
         .success()
-        .stdout("Hello, World!\n");
+        .stdout(predicate::eq("Hello, World!\n").normalize());
     }
 
     #[test]
@@ -67,8 +68,11 @@ mod tests {
         })
         .success()
         .stdout(
-            "FOO is set to `bar baz qux`\n\
-             HELLO is set to `World!`\n",
+            predicate::eq(
+                "FOO is set to `bar baz qux`\n\
+                HELLO is set to `World!`\n",
+            )
+            .normalize(),
         );
     }
 
@@ -98,8 +102,11 @@ mod tests {
         })
         .success()
         .stdout(
-            "FOO is set to `bar baz qux`\n\
-             HELLO is set to `World!`\n",
+            predicate::eq(
+                "FOO is set to `bar baz qux`\n\
+                HELLO is set to `World!`\n",
+            )
+            .normalize(),
         );
 
         remove_var("INLINE_C_RS_FOO");
