@@ -25,28 +25,24 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let (program, variables) = collect_environment_variables(program);
 
     let mut program_file = tempfile::Builder::new()
+        .prefix("inline-c-rs-")
         .suffix(&format!(".{}", language.to_string()))
         .tempfile()?;
     program_file.write(program.as_bytes())?;
-
-    //#[cfg(target_os = "windows")]
-    {
-        let file = program_file.as_file();
-        let mut permissions = file.metadata()?.permissions();
-        dbg!(&permissions);
-        dbg!(permissions.readonly());
-        permissions.set_readonly(false);
-        file.set_permissions(permissions)?;
-    }
-
-    dbg!(program_file.as_file().metadata()?.permissions().readonly());
 
     let host = target_lexicon::HOST.to_string();
     let target = &host;
 
     let (_, input_file) = program_file.keep()?;
-    let output_temp = tempfile::Builder::new().tempfile()?;
-    let (_, output_path) = output_temp.keep()?;
+    let mut output_temp = tempfile::Builder::new();
+    let output_temp = output_temp.prefix("inline-c-rs-");
+
+    #[cfg(target_os = "windows")]
+    output_temp.suffix(".exe");
+
+    let (_, output_path) = output_temp.tempfile()?.keep()?;
+
+    dbg!(&output_path);
 
     let mut build = cc::Build::new();
     let mut build = build
