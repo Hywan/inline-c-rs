@@ -134,7 +134,7 @@ fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap
 // This is copy-pasted and edited from `cc-rs`.
 fn command_add_output_file(command: &mut Command, output_path: &PathBuf, msvc: bool, clang: bool) {
     if msvc && !clang {
-        let mut string = OsString::from("-out");
+        let mut string = OsString::from("-out:");
         string.push(output_path);
         command.arg(string);
     } else {
