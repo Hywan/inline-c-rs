@@ -29,6 +29,16 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
         .tempfile()?;
     program_file.write(program.as_bytes())?;
 
+    #[cfg(target_os = "windows")]
+    {
+        let file = program_file.as_file();
+        let mut permissions = file.metadata()?.permissions();
+        dbg!(&permissions);
+        dbg!(permissions.readonly());
+        permissions.set_readonly(false);
+        file.set_permissions(permissions)?;
+    }
+
     let host = target_lexicon::HOST.to_string();
     let target = &host;
 
