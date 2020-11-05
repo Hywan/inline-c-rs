@@ -3,7 +3,7 @@ use crate::assert::Assert;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{
-    borrow::Cow, collections::HashMap, env, error::Error, ffi::OsString, io::prelude::*,
+    borrow::Cow, collections::HashMap, env, error::Error, ffi::OsString, fs, io::prelude::*,
     path::PathBuf, process::Command,
 };
 
@@ -29,7 +29,7 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
         .tempfile()?;
     program_file.write(program.as_bytes())?;
 
-    #[cfg(target_os = "windows")]
+    //#[cfg(target_os = "windows")]
     {
         let file = program_file.as_file();
         let mut permissions = file.metadata()?.permissions();
@@ -44,7 +44,7 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let host = target_lexicon::HOST.to_string();
     let target = &host;
 
-    let input_file = program_file.path();
+    let (_, input_file) = program_file.keep()?;
     let output_temp = tempfile::Builder::new().tempfile()?;
     let (_, output_path) = output_temp.keep()?;
 
@@ -80,9 +80,11 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
         command_add_output_file(&mut command, &output_path, msvc, clang);
     }
 
-    command.arg(input_file);
+    command.arg(&input_file);
 
     let clang_output = command.envs(variables.clone()).output()?;
+
+    fs::remove_file(input_file).expect("Failed to remove the source file.");
 
     if !clang_output.status.success() {
         return Ok(Assert::new(format!("{:?}", command), clang_output, None));
