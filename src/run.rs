@@ -25,6 +25,8 @@ impl ToString for Language {
 pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> {
     let (program, variables) = collect_environment_variables(program);
 
+    dbg!(&program);
+
     let mut program_file = tempfile::Builder::new()
         .prefix("inline-c-rs-")
         .suffix(&format!(".{}", language.to_string()))
@@ -34,7 +36,7 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let host = target_lexicon::HOST.to_string();
     let target = &host;
 
-    let (_, input_file) = program_file.keep()?;
+    let (_, input_path) = program_file.keep()?;
     let mut output_temp = tempfile::Builder::new();
     let output_temp = output_temp.prefix("inline-c-rs-");
 
@@ -42,6 +44,9 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     output_temp.suffix(".exe");
 
     let (_, output_path) = output_temp.tempfile()?.keep()?;
+
+    dbg!(&input_path);
+    dbg!(&output_path);
 
     let mut build = cc::Build::new();
     let mut build = build
@@ -75,12 +80,12 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
         command_add_output_file(&mut command, &output_path, msvc, clang);
     }
 
-    command.arg(&input_file);
+    command.arg(&input_path);
     command.envs(variables.clone());
 
     let clang_output = command.output()?;
 
-    fs::remove_file(input_file).expect("Failed to remove the source file.");
+    fs::remove_file(input_path).expect("Failed to remove the source file.");
 
     if !clang_output.status.success() {
         return Ok(assert_cmd::Command::from_std(command).assert());
@@ -96,9 +101,10 @@ fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap
     const ENV_VAR_PREFIX: &'static str = "INLINE_C_RS_";
 
     lazy_static! {
-        static ref REGEX: Regex =
-            Regex::new(r#"#inline_c_rs (?P<variable_name>[^:]+):\s*"(?P<variable_value>[^"]+)"\n"#)
-                .unwrap();
+        static ref REGEX: Regex = Regex::new(
+            r#"#inline_c_rs (?P<variable_name>[^:]+):\s*"(?P<variable_value>[^"]+)"\r?\n"#
+        )
+        .unwrap();
     }
 
     let mut variables = HashMap::new();
