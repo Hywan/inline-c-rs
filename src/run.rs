@@ -78,6 +78,8 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
 
     command.arg(&input_file);
 
+    dbg!(&command);
+
     let clang_output = command.envs(variables.clone()).output()?;
 
     fs::remove_file(input_file).expect("Failed to remove the source file.");
@@ -132,7 +134,7 @@ fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap
 // This is copy-pasted and edited from `cc-rs`.
 fn command_add_output_file(command: &mut Command, output_path: &PathBuf, msvc: bool, clang: bool) {
     if msvc && !clang {
-        let mut string = OsString::from("-Fo");
+        let mut string = OsString::from("-out");
         string.push(output_path);
         command.arg(string);
     } else {
