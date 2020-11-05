@@ -25,8 +25,6 @@ impl ToString for Language {
 pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> {
     let (program, variables) = collect_environment_variables(program);
 
-    dbg!(&program);
-
     let mut program_file = tempfile::Builder::new()
         .prefix("inline-c-rs-")
         .suffix(&format!(".{}", language.to_string()))
@@ -44,9 +42,6 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     output_temp.suffix(".exe");
 
     let (_, output_path) = output_temp.tempfile()?.keep()?;
-
-    dbg!(&input_path);
-    dbg!(&output_path);
 
     let mut build = cc::Build::new();
     let mut build = build

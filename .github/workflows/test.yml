@@ -51,4 +51,4 @@ jobs:
         shell: bash
         run: |
           cargo build --release
-          RUST_BACKTRACE=1 cargo test --release -- --nocapture test_c_macro_with_env_vars_inlined
+          cargo test --release -- --nocapture

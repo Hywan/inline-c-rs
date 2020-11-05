@@ -42,6 +42,7 @@ mod tests {
         .stdout(predicate::eq("Hello, World!\n").normalize());
     }
 
+    #[cfg(not(target_os = "windows"))]
     #[test]
     fn test_c_macro_with_env_vars_inlined() {
         (assert_c! {
@@ -50,13 +51,7 @@ mod tests {
             #inline_c_rs HELLO: "World!"
 
             #include <stdio.h>
-
-            #ifdef _WIN32
-            #include <cstdlib>
-            #elif
             #include <stdlib.h>
-            #endif
-
 
             int main() {
                 const char* foo = getenv("FOO");
@@ -82,6 +77,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(target_os = "windows"))]
     #[test]
     fn test_c_macro_with_env_vars_from_env_vars() {
         // Define env vars through env vars.
