@@ -9,7 +9,11 @@ jobs:
 
     strategy:
       matrix:
-        target: [ubuntu-latest, macos-latest, windows-latest]
+        target: [
+          ubuntu-latest,
+          macos-latest,
+          #windows-latest
+        ]
       fail-fast: false
 
     runs-on: ${{ matrix.target }}
