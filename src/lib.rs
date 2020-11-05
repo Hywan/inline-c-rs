@@ -50,7 +50,13 @@ mod tests {
             #inline_c_rs HELLO: "World!"
 
             #include <stdio.h>
+
+            #ifdef _WIN32
+            #include <cstdlib>
+            #elif
             #include <stdlib.h>
+            #endif
+
 
             int main() {
                 const char* foo = getenv("FOO");
