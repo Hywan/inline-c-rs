@@ -38,8 +38,7 @@ fn test_successful() {
         }
     })
     .success()
-    .stdout("Hello, World!\n")
-    .no_stderr();
+    .stdout("Hello, World!\n");
 }
 
 #[test]
@@ -53,9 +52,7 @@ fn test_badly() {
         }
     })
     .failure()
-    .code(3)
-    .no_stdout()
-    .no_stderr();
+    .code(3);
 }
 ```
 
@@ -105,8 +102,7 @@ fn test_c_macro_with_env_vars_inlined() {
         }
     })
     .success()
-    .stdout("FOO is set to `bar baz qux`\n")
-    .no_stderr();
+    .stdout("FOO is set to `bar baz qux`\n");
 }
 ```
 
@@ -149,8 +145,7 @@ fn test_c_macro_with_env_vars_from_env_vars() {
         }
     })
     .success()
-    .stdout("FOO is set to `bar baz qux`\n")
-    .no_stderr();
+    .stdout("FOO is set to `bar baz qux`\n");
 
     remove_var("INLINE_C_RS_FOO");
     remove_var("INLINE_C_RS_CFLAGS");
