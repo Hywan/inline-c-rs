@@ -1,9 +1,10 @@
-mod assert;
 mod run;
 
-pub use crate::assert::Assert;
 pub use crate::run::{run, Language};
 pub use inline_c_macro::{assert_c, assert_cxx};
+pub mod predicates {
+    pub use predicates::prelude::*;
+}
 
 #[cfg(test)]
 mod tests {
@@ -22,9 +23,7 @@ mod tests {
             }
         })
         .failure()
-        .code(3)
-        .no_stdout()
-        .no_stderr();
+        .code(3);
     }
 
     #[test]
@@ -39,8 +38,7 @@ mod tests {
             }
         })
         .success()
-        .stdout("Hello, World!\n")
-        .no_stderr();
+        .stdout("Hello, World!\n");
     }
 
     #[test]
@@ -71,8 +69,7 @@ mod tests {
         .stdout(
             "FOO is set to `bar baz qux`\n\
              HELLO is set to `World!`\n",
-        )
-        .no_stderr();
+        );
     }
 
     #[test]
@@ -103,8 +100,7 @@ mod tests {
         .stdout(
             "FOO is set to `bar baz qux`\n\
              HELLO is set to `World!`\n",
-        )
-        .no_stderr();
+        );
 
         remove_var("INLINE_C_RS_FOO");
         remove_var("INLINE_C_RS_HELLO");

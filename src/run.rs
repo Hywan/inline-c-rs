@@ -1,4 +1,5 @@
-use crate::assert::Assert;
+//use crate::assert::Assert;
+use assert_cmd::assert::Assert;
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -77,25 +78,22 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     }
 
     command.arg(&input_file);
+    command.envs(variables.clone());
 
     dbg!(&command);
 
-    let clang_output = command.envs(variables.clone()).output()?;
+    let clang_output = command.output()?;
 
     fs::remove_file(input_file).expect("Failed to remove the source file.");
 
     if !clang_output.status.success() {
-        return Ok(Assert::new(format!("{:?}", command), clang_output, None));
+        return Ok(assert_cmd::Command::from_std(command).assert());
     }
 
     let mut command = Command::new(output_path.clone());
     command.envs(variables);
 
-    Ok(Assert::new(
-        format!("{:?}", command),
-        command.output()?,
-        Some(output_path),
-    ))
+    Ok(assert_cmd::Command::from_std(command).assert())
 }
 
 fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap<String, String>) {
@@ -166,6 +164,7 @@ fn command_add_compiler_flags(command: &mut Command, variables: &HashMap<String,
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::predicates::*;
 
     #[test]
     fn test_run_c() {
@@ -183,8 +182,7 @@ mod tests {
         )
         .unwrap()
         .success()
-        .stdout("Hello, World!\n")
-        .no_stderr();
+        .stdout(predicate::eq("Hello, World!\n").normalize());
     }
 
     #[test]
@@ -203,7 +201,6 @@ mod tests {
         )
         .unwrap()
         .success()
-        .stdout("Hello, World!\n")
-        .no_stderr();
+        .stdout(predicate::eq("Hello, World!\n").normalize());
     }
 }
