@@ -39,6 +39,8 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
         file.set_permissions(permissions)?;
     }
 
+    dbg!(program_file.as_file().metadata()?.permissions().readonly());
+
     let host = target_lexicon::HOST.to_string();
     let target = &host;
 
