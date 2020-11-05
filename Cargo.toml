@@ -1,9 +1,15 @@
 [package]
 name = "inline-c"
 version = "0.1.0"
+description = "Write and execute C code inside Rust"
+license = "BSD-3-Clause"
 authors = ["Ivan Enderlin <ivan@mnt.io>"]
-edition = "2018"
 repository = "https://github.com/Hywan/inline-c-rs"
+homepage = "https://github.com/Hywan/inline-c-rs"
+readme = "README.md"
+categories = ["development-tools::testing"]
+keywords = ["test", "c", "cpp"]
+edition = "2018"
 
 [dependencies]
 tempfile = "3.1"

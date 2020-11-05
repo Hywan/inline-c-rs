@@ -15,6 +15,15 @@ fully sandboxed, values cannot be exchanged between the two. The
 purpose of `inline-c` is to ease the testing of a C API, that is for
 example automatically generated with [`cbindgen`].
 
+## Install
+
+Add the following lines to your `Cargo.toml` file:
+
+```toml
+[dev-dependencies]
+inline-c = "0.1"
+```
+
 ## Example
 
 ### The `assert_c!` and `assert_cxx!` macros
