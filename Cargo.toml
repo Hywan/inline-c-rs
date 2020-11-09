@@ -1,6 +1,6 @@
 [package]
 name = "inline-c"
-version = "0.1.0"
+version = "0.1.1"
 description = "Write and execute C code inside Rust"
 license = "BSD-3-Clause"
 authors = ["Ivan Enderlin <ivan@mnt.io>"]
