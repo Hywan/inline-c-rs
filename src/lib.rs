@@ -1,3 +1,4 @@
+mod assert;
 mod run;
 
 pub use crate::run::{run, Language};
