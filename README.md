@@ -78,7 +78,7 @@ Great! We may want to define a value for the `CFLAGS` and the
 `#inline_c_rs` C directive with the following syntax:
 
 ```
-#include_c_rs <variable_name>: "<variable_value>"
+#inline_c_rs <variable_name>: "<variable_value>"
 ```
 
 Please note the double quotes around the variable value.
