@@ -38,8 +38,9 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let mut output_temp = tempfile::Builder::new();
     let output_temp = output_temp.prefix("inline-c-rs-");
 
-    #[cfg(target_os = "windows")]
-    output_temp.suffix(".exe");
+    if msvc {
+        output_temp.suffix(".exe");
+    }
 
     let (_, output_path) = output_temp.tempfile()?.keep()?;
 
@@ -65,12 +66,19 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     // arguments.
 
     let compiler = build.try_get_compiler()?;
-
     let mut command = Command::new(compiler.path());
-    command.args(compiler.args());
-    command.arg(input_path.clone()); // the input must come first
-    command_add_compiler_flags(&mut command, &variables);
-    command_add_output_file(&mut command, &output_path, msvc, compiler.is_like_clang());
+
+    if msvc {
+        command.args(compiler.args());
+        command_add_compiler_flags(&mut command, &variables);
+        command_add_output_file(&mut command, &output_path, msvc, compiler.is_like_clang());
+        command.arg(input_path.clone());
+    } else {
+        command.arg(input_path.clone()); // the input must come first
+        command.args(compiler.args());
+        command_add_compiler_flags(&mut command, &variables);
+        command_add_output_file(&mut command, &output_path, msvc, compiler.is_like_clang());
+    }
 
     command.envs(variables.clone());
 
