@@ -67,8 +67,8 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let compiler = build.try_get_compiler()?;
 
     let mut command = Command::new(compiler.path());
-    command.arg(input_path.clone()); // the input must come first
     command.args(compiler.args());
+    command.arg(input_path.clone()); // the input must come first
     command_add_compiler_flags(&mut command, &variables);
     command_add_output_file(&mut command, &output_path, msvc, compiler.is_like_clang());
 
