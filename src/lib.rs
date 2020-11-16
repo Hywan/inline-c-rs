@@ -12,7 +12,6 @@ mod tests {
     use super::predicates::*;
     use super::*;
     use crate as inline_c;
-    use std::env::{remove_var, set_var};
 
     #[test]
     fn test_c_macro() {
@@ -81,6 +80,8 @@ mod tests {
     #[cfg(not(target_os = "windows"))]
     #[test]
     fn test_c_macro_with_env_vars_from_env_vars() {
+        use std::env::{remove_var, set_var};
+
         // Define env vars through env vars.
         set_var("INLINE_C_RS_FOO", "bar baz qux");
         set_var("INLINE_C_RS_HELLO", "World!");

@@ -32,12 +32,15 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let host = target_lexicon::HOST.to_string();
     let target = &host;
 
+    let msvc = target.contains("msvc");
+
     let (_, input_path) = program_file.keep()?;
     let mut output_temp = tempfile::Builder::new();
     let output_temp = output_temp.prefix("inline-c-rs-");
 
-    #[cfg(target_os = "windows")]
-    output_temp.suffix(".exe");
+    if msvc {
+        output_temp.suffix(".exe");
+    }
 
     let (_, output_path) = output_temp.tempfile()?.keep()?;
 
@@ -63,17 +66,24 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     // arguments.
 
     let compiler = build.try_get_compiler()?;
-    let mut command = compiler.to_command();
+    let mut command;
 
-    command_add_compiler_flags(&mut command, &variables);
+    if msvc {
+        command = compiler.to_command();
 
-    {
-        let msvc = target.contains("msvc");
-        let clang = compiler.is_like_clang();
-        command_add_output_file(&mut command, &output_path, msvc, clang);
+        command_add_compiler_flags(&mut command, &variables);
+        command_add_output_file(&mut command, &output_path, msvc, compiler.is_like_clang());
+        command.arg(input_path.clone());
+        command.envs(variables.clone());
+    } else {
+        command = Command::new(compiler.path());
+
+        command.arg(input_path.clone()); // the input must come first
+        command.args(compiler.args());
+        command_add_compiler_flags(&mut command, &variables);
+        command_add_output_file(&mut command, &output_path, msvc, compiler.is_like_clang());
     }
 
-    command.arg(&input_path);
     command.envs(variables.clone());
 
     let clang_output = command.output()?;
