@@ -3,6 +3,9 @@
   inline-c
 </h1>
 
+[![crates.io](https://img.shields.io/crates/v/inline-c)](https://crates.io/crates/inline-c)
+[![documentation](https://img.shields.io/badge/doc-inline--c-green)](https://docs.rs/inline-c)
+
 `inline-c` is a small crate that allows a user to write C (including
 C++) code inside Rust. Both environments are strictly sandboxed: it is
 non-obvious for a value to cross the boundary. The C code is
