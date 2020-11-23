@@ -1,6 +1,10 @@
+//! Please see the `inline-c` crate to learn more.
+
 use proc_macro2::TokenStream;
 use quote::quote;
 
+/// Execute a C program and return a `Result` of
+/// `inline_c::Assert`. See examples inside the `inline-c` crate.
 #[proc_macro]
 pub fn assert_c(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
@@ -12,6 +16,8 @@ pub fn assert_c(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     .into()
 }
 
+/// Execute a C++ program and return a `Result` of
+/// `inline_c::Assert`. See examples inside the `inline-c` crate.
 #[proc_macro]
 pub fn assert_cxx(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);

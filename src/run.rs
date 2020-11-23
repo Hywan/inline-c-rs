@@ -6,6 +6,7 @@ use std::{
     path::PathBuf, process::Command,
 };
 
+#[doc(hidden)]
 pub enum Language {
     C,
     Cxx,
@@ -20,6 +21,7 @@ impl ToString for Language {
     }
 }
 
+#[doc(hidden)]
 pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> {
     let (program, variables) = collect_environment_variables(program);
 

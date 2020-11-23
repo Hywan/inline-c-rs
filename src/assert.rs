@@ -1,5 +1,7 @@
 use std::{fs, path::PathBuf, process::Command};
 
+/// `Assert` is a wrapper around the [`assert_cmd::assert::Assert`]
+/// struct.
 pub struct Assert {
     command: assert_cmd::Command,
     files_to_remove: Option<Vec<PathBuf>>,
