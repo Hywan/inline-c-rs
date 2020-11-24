@@ -53,10 +53,8 @@
 //!     (assert_cxx! {
 //!         #include <iostream>
 //!
-//!         using namespace std;
-//!
 //!         int main() {
-//!             cout << "Hello, World!";
+//!             std::cout << "Hello, World!";
 //!
 //!             return 0;
 //!         }
@@ -65,7 +63,10 @@
 //!     .stdout("Hello, World!");
 //! }
 //!
-//! # fn main() { test_cxx(); }
+//! # fn main() {
+//! #     #[cfg(not(target_os = "windows"))]
+//! #     test_cxx();
+//! # }
 //! ```
 //!
 //! The [`assert_c`] and [`assert_cxx`] macros return a
@@ -131,7 +132,10 @@
 //!     .stdout("FOO is set to `bar baz qux`");
 //! }
 //!
-//! # fn main() { test_environment_variable() }
+//! # fn main() {
+//! #     std::env::set_var("INLINE_C_RS_CFLAGS", "-D_CRT_SECURE_NO_WARNINGS");
+//! #     test_environment_variable()
+//! # }
 //! ```
 //!
 //! ### Meta environment variables
@@ -178,7 +182,10 @@
 //!     remove_var("INLINE_C_RS_FOO");
 //! }
 //!
-//! # fn main() { test_meta_environment_variable() }
+//! # fn main() {
+//! #     std::env::set_var("INLINE_C_RS_CFLAGS", "-D_CRT_SECURE_NO_WARNINGS");
+//! #     test_meta_environment_variable()
+//! # }
 //! ```
 //!
 //! ### `CFLAGS`, `CPPFLAGS`, `CXXFLAGS` and `LDFLAGS`
@@ -349,6 +356,7 @@ mod tests {
     use super::predicates::*;
     use super::*;
     use crate as inline_c;
+    use std::env::{remove_var, set_var};
 
     #[test]
     fn test_c_macro() {
@@ -379,9 +387,10 @@ mod tests {
         .stdout(predicate::eq("Hello, World!\n").normalize());
     }
 
-    #[cfg(not(target_os = "windows"))]
     #[test]
     fn test_c_macro_with_env_vars_inlined() {
+        set_var("INLINE_C_RS_CFLAGS", "-D_CRT_SECURE_NO_WARNINGS");
+
         (assert_c! {
             // Those are env variables.
             #inline_c_rs FOO: "bar baz qux"
@@ -412,16 +421,16 @@ mod tests {
             )
             .normalize(),
         );
+
+        remove_var("INLINE_C_RS_CFLAGS");
     }
 
-    #[cfg(not(target_os = "windows"))]
     #[test]
     fn test_c_macro_with_env_vars_from_env_vars() {
-        use std::env::{remove_var, set_var};
-
         // Define env vars through env vars.
         set_var("INLINE_C_RS_FOO", "bar baz qux");
         set_var("INLINE_C_RS_HELLO", "World!");
+        set_var("INLINE_C_RS_CFLAGS", "-D_CRT_SECURE_NO_WARNINGS");
 
         (assert_c! {
             #include <stdio.h>
@@ -452,5 +461,6 @@ mod tests {
 
         remove_var("INLINE_C_RS_FOO");
         remove_var("INLINE_C_RS_HELLO");
+        remove_var("INLINE_C_RS_CFLAGS");
     }
 }
