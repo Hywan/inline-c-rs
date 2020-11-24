@@ -53,10 +53,8 @@
 //!     (assert_cxx! {
 //!         #include <iostream>
 //!
-//!         using namespace std;
-//!
 //!         int main() {
-//!             cout << "Hello, World!";
+//!             std::cout << "Hello, World!";
 //!
 //!             return 0;
 //!         }
@@ -65,7 +63,10 @@
 //!     .stdout("Hello, World!");
 //! }
 //!
-//! # fn main() { test_cxx(); }
+//! # fn main() {
+//! #     #[cfg(not(target_os = "windows"))]
+//! #     test_cxx();
+//! # }
 //! ```
 //!
 //! The [`assert_c`] and [`assert_cxx`] macros return a
