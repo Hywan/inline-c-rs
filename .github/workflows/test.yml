@@ -54,7 +54,7 @@ jobs:
           cargo test --release -- --nocapture
 
   # The `test-nightly` job.
-  test:
+  test-nightly:
     name: Test (nightly)
 
     strategy:
