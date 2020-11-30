@@ -35,7 +35,8 @@ impl Drop for Assert {
         if let Some(files_to_remove) = &self.files_to_remove {
             for file in files_to_remove.iter() {
                 if fs::metadata(file).is_ok() {
-                    fs::remove_file(file).expect(&format!("Failed to remove `{:?}`", file));
+                    fs::remove_file(file)
+                        .unwrap_or_else(|_| panic!("Failed to remove `{:?}`", file));
                 }
             }
         }

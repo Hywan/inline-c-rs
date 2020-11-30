@@ -47,9 +47,7 @@ fn reconstruct(input: TokenStream) -> String {
 
                         match iterator.peek() {
                             // #include …
-                            Some(Ident(include))
-                                if include.to_string() == "include".to_string() =>
-                            {
+                            Some(Ident(include)) if *include == "include" => {
                                 iterator.next();
 
                                 match iterator.next() {
@@ -108,7 +106,7 @@ fn reconstruct(input: TokenStream) -> String {
                             }
 
                             // #define, only available on nightly.
-                            Some(Ident(define)) if define.to_string() == "define".to_string() => {
+                            Some(Ident(define)) if *define == "define" => {
                                 #[cfg(not(nightly))]
                                 panic!(
                                     "`#define` in C is only supported in `inline-c` with Rust nightly"

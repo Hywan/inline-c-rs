@@ -29,7 +29,7 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
         .prefix("inline-c-rs-")
         .suffix(&format!(".{}", language.to_string()))
         .tempfile()?;
-    program_file.write(program.as_bytes())?;
+    program_file.write_all(program.as_bytes())?;
 
     let host = target_lexicon::HOST.to_string();
     let target = &host;
@@ -91,23 +91,17 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let clang_output = command.output()?;
 
     if !clang_output.status.success() {
-        return Ok(Assert::new(
-            command,
-            Some(vec![input_path.to_path_buf(), output_path.to_path_buf()]),
-        ));
+        return Ok(Assert::new(command, Some(vec![input_path, output_path])));
     }
 
     let mut command = Command::new(output_path.clone());
     command.envs(variables);
 
-    Ok(Assert::new(
-        command,
-        Some(vec![input_path.to_path_buf(), output_path.to_path_buf()]),
-    ))
+    Ok(Assert::new(command, Some(vec![input_path, output_path])))
 }
 
 fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap<String, String>) {
-    const ENV_VAR_PREFIX: &'static str = "INLINE_C_RS_";
+    const ENV_VAR_PREFIX: &str = "INLINE_C_RS_";
 
     lazy_static! {
         static ref REGEX: Regex = Regex::new(
@@ -157,7 +151,7 @@ fn command_add_compiler_flags(command: &mut Command, variables: &HashMap<String,
             .get(env_name)
             .map(|e| e.to_string())
             .ok_or_else(|| env::var(env_name))
-            .unwrap_or(String::new())
+            .unwrap_or_default()
             .split_ascii_whitespace()
             .map(|slice| slice.to_string())
             .collect()
