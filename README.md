@@ -333,6 +333,8 @@ directive.
 * [Cargo C](https://github.com/lu-zero/cargo-c), to build and install
   C-compatible libraries; it configures `inline-c` for you when using
   `cargo ctest`!
+* [Biscuit](https://github.com/CleverCloud/biscuit-rust), an
+  authorization token microservices architectures.
 
 ## License
 
