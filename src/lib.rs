@@ -463,4 +463,17 @@ mod tests {
         remove_var("INLINE_C_RS_HELLO");
         remove_var("INLINE_C_RS_CFLAGS");
     }
+
+    #[cfg(nightly)]
+    #[test]
+    fn test_c_macro_with_define() {
+        (assert_c! {
+            #define sum(a, b) ((a) + (b))
+
+            int main() {
+                return !(sum(1, 2) == 3);
+            }
+        })
+        .success();
+    }
 }

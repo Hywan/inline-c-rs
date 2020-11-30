@@ -46,12 +46,14 @@ fn reconstruct(input: TokenStream) -> String {
                         output.push(token_value);
 
                         match iterator.peek() {
+                            // #include …
                             Some(Ident(include))
                                 if include.to_string() == "include".to_string() =>
                             {
                                 iterator.next();
 
                                 match iterator.next() {
+                                    // #include <…>
                                     Some(Punct(punct)) => {
                                         if punct.as_char() != '<' {
                                             panic!(
@@ -89,6 +91,7 @@ fn reconstruct(input: TokenStream) -> String {
                                         output.push('\n');
                                     }
 
+                                    // #include "…"
                                     Some(Literal(literal)) => {
                                         output.push_str("include ");
                                         output.push_str(&literal.to_string());
@@ -101,6 +104,37 @@ fn reconstruct(input: TokenStream) -> String {
                                     ),
 
                                     None => panic!("`#include` must be followed by `<` or `\"`."),
+                                }
+                            }
+
+                            // #define, only available on nightly.
+                            Some(Ident(define)) if define.to_string() == "define".to_string() => {
+                                #[cfg(not(nightly))]
+                                panic!(
+                                    "`#define` in C is only supported in `inline-c` with Rust nightly"
+                                );
+
+                                #[cfg(nightly)]
+                                {
+                                    let current_line = define.span().start().line;
+                                    iterator.next();
+                                    output.push_str("define ");
+
+                                    loop {
+                                        match iterator.peek() {
+                                            Some(item) => {
+                                                if item.span().start().line == current_line {
+                                                    output.push_str(&item.to_string());
+                                                    iterator.next();
+                                                } else {
+                                                    output.push('\n');
+                                                    break;
+                                                }
+                                            }
+
+                                            None => break,
+                                        }
+                                    }
                                 }
                             }
 
