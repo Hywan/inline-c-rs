@@ -301,6 +301,31 @@ rules are applied, rather than the C ruleset. [See this issue on
 `rustdoc` to follow the
 fix](https://github.com/rust-lang/rust/issues/78917).
 
+### C macros
+
+C macros with the `#define` directive is supported only with Rust
+nightly. One can write:
+
+```rust,ignore
+use inline_c::assert_c;
+
+fn test_c_macro() {
+    (assert_c! {
+        #define sum(a, b) ((a) + (b))
+
+        int main() {
+            return !(sum(1, 2) == 3);
+        }
+    })
+    .success();
+}
+```
+
+Note that multi-lines macros don't work! That's because the `\` symbol
+is consumed by the Rust lexer. The best workaround is to define the
+macro in another `.h` file, and to include it with the `#include`
+directive.
+
 ## Who is using it?
 
 * [Wasmer](https://github.com/wasmerio/wasmer), the leading
@@ -308,6 +333,8 @@ fix](https://github.com/rust-lang/rust/issues/78917).
 * [Cargo C](https://github.com/lu-zero/cargo-c), to build and install
   C-compatible libraries; it configures `inline-c` for you when using
   `cargo ctest`!
+* [Biscuit](https://github.com/CleverCloud/biscuit-rust), an
+  authorization token microservices architectures.
 
 ## License
 
