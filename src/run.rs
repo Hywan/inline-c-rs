@@ -91,13 +91,19 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let clang_output = command.output()?;
 
     if !clang_output.status.success() {
-        return Ok(Assert::new(command, Some(vec![input_path.to_path_buf()])));
+        return Ok(Assert::new(
+            command,
+            Some(vec![input_path.to_path_buf(), output_path.to_path_buf()]),
+        ));
     }
 
     let mut command = Command::new(output_path.clone());
     command.envs(variables);
 
-    Ok(Assert::new(command, Some(vec![output_path.to_path_buf()])))
+    Ok(Assert::new(
+        command,
+        Some(vec![input_path.to_path_buf(), output_path.to_path_buf()]),
+    ))
 }
 
 fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap<String, String>) {
