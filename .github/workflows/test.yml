@@ -105,7 +105,10 @@ jobs:
 
   # The `clippy` job.
   clippy:
+    name: Clippy
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out code
         uses: actions/checkout@v2
