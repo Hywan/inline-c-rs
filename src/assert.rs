@@ -34,7 +34,9 @@ impl Drop for Assert {
     fn drop(&mut self) {
         if let Some(files_to_remove) = &self.files_to_remove {
             for file in files_to_remove.iter() {
-                fs::remove_file(file).expect(&format!("Failed to remove `{:?}`", file));
+                if fs::metadata(file).is_ok() {
+                    fs::remove_file(file).expect(&format!("Failed to remove `{:?}`", file));
+                }
             }
         }
     }
