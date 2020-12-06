@@ -53,6 +53,10 @@ jobs:
           cargo build --release
           cargo test --release -- --nocapture
 
+      - name: Check leftover files
+        shell: bash --noprofile --norc {0}
+        run: test $(git ls-files --exclude-standard --others | tee /dev/stderr | wc -l) -eq 0
+
   # The `test-nightly` job.
   test-nightly:
     name: Test (nightly)
@@ -102,6 +106,10 @@ jobs:
         run: |
           cargo build --release
           cargo test --release -- --nocapture
+
+      - name: Check leftover files
+        shell: bash --noprofile --norc {0}
+        run: test $(git ls-files --exclude-standard --others | tee /dev/stderr | wc -l) -eq 0
 
   # The `clippy` job.
   clippy:
