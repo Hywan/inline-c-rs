@@ -88,16 +88,23 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
 
     command.envs(variables.clone());
 
+    let mut files_to_remove = vec![input_path, output_path.clone()];
+    if msvc {
+        let mut intermediate_path = output_path.clone();
+        intermediate_path.set_extension("obj");
+        files_to_remove.push(intermediate_path);
+    }
+
     let clang_output = command.output()?;
 
     if !clang_output.status.success() {
-        return Ok(Assert::new(command, Some(vec![input_path, output_path])));
+        return Ok(Assert::new(command, Some(files_to_remove)));
     }
 
-    let mut command = Command::new(output_path.clone());
+    let mut command = Command::new(output_path);
     command.envs(variables);
 
-    Ok(Assert::new(command, Some(vec![input_path, output_path])))
+    Ok(Assert::new(command, Some(files_to_remove)))
 }
 
 fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap<String, String>) {
@@ -137,9 +144,16 @@ fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap
 // This is copy-pasted and edited from `cc-rs`.
 fn command_add_output_file(command: &mut Command, output_path: &PathBuf, msvc: bool, clang: bool) {
     if msvc && !clang {
-        let mut string = OsString::from("-Fe");
-        string.push(output_path);
-        command.arg(string);
+        let mut intermediate_path = output_path.clone();
+        intermediate_path.set_extension("obj");
+
+        let mut fo_arg = OsString::from("-Fo");
+        fo_arg.push(intermediate_path);
+        command.arg(fo_arg);
+
+        let mut fe_arg = OsString::from("-Fe");
+        fe_arg.push(output_path);
+        command.arg(fe_arg);
     } else {
         command.arg("-o").arg(output_path);
     }
