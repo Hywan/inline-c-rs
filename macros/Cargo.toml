@@ -1,6 +1,6 @@
 [package]
 name = "inline-c-macro"
-version = "0.1.4"
+version = "0.1.5"
 description = "The macros for the `inline-c` crate, that allows to write and execute C code inside Rust"
 license = "BSD-3-Clause"
 authors = ["Ivan Enderlin <ivan@mnt.io>"]
