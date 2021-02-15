@@ -205,7 +205,7 @@ object by writing this in a `build.rs` script (it is assumed that
 lands in the root directory):
 
 ```rust
-use std::{env, ffi::OsStr};
+use std::{env, path::PathBuf};
 
 fn main() {
     let include_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
