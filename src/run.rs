@@ -54,8 +54,7 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
         .warnings_into_errors(true)
         .debug(false)
         .host(&host)
-        .target(target)
-        .opt_level(2);
+        .target(target);
 
     if let Language::Cxx = language {
         build = build.cpp(true);
