@@ -19,7 +19,7 @@ lazy_static = "1.4"
 cc = "1.0"
 target-lexicon = "0.11"
 assert_cmd = "1.0"
-predicates = "1.0"
+predicates = "2"
 
 [build-dependencies]
 rustc_version = "0.3"
