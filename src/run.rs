@@ -98,13 +98,13 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     let clang_output = command.output()?;
 
     if !clang_output.status.success() {
-        return Ok(Assert::new(command, Some(files_to_remove)));
+        return Ok(Assert::new(command, Some(files_to_remove), output_path));
     }
 
-    let mut command = Command::new(output_path);
+    let mut command = Command::new(output_path.clone());
     command.envs(variables);
 
-    Ok(Assert::new(command, Some(files_to_remove)))
+    Ok(Assert::new(command, Some(files_to_remove), output_path))
 }
 
 fn collect_environment_variables<'p>(program: &'p str) -> (Cow<'p, str>, HashMap<String, String>) {

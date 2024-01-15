@@ -5,13 +5,15 @@ use std::{fs, path::PathBuf, process::Command};
 pub struct Assert {
     command: assert_cmd::Command,
     files_to_remove: Option<Vec<PathBuf>>,
+    output_path: PathBuf,
 }
 
 impl Assert {
-    pub(crate) fn new(command: Command, files_to_remove: Option<Vec<PathBuf>>) -> Self {
+    pub(crate) fn new(command: Command, files_to_remove: Option<Vec<PathBuf>>, output_path: PathBuf) -> Self {
         Self {
             command: assert_cmd::Command::from_std(command),
-            files_to_remove,
+            files_to_remove: files_to_remove,
+            output_path: output_path
         }
     }
 
@@ -27,6 +29,10 @@ impl Assert {
     /// Shortcut to `self.assert().failure()`.
     pub fn failure(&mut self) -> assert_cmd::assert::Assert {
         self.assert().failure()
+    }
+
+    pub fn output_path(&self) -> &PathBuf {
+        &self.output_path
     }
 }
 
