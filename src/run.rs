@@ -73,16 +73,16 @@ pub fn run(language: Language, program: &str) -> Result<Assert, Box<dyn Error>> 
     if msvc {
         command = compiler.to_command();
 
-        command_add_compiler_flags(&mut command, &variables, msvc);
+        command_add_compiler_flags(&mut command, &variables);
         command_add_output_file(&mut command, &output_path, msvc, compiler.is_like_clang());
         command.arg(input_path.clone());
-        command_add_linker_flags_msvc(&mut command, &variables);
+        command.envs(variables.clone());
     } else {
         command = Command::new(compiler.path());
 
         command.arg(input_path.clone()); // the input must come first
         command.args(compiler.args());
-        command_add_compiler_flags(&mut command, &variables, msvc);
+        command_add_compiler_flags(&mut command, &variables);
         command_add_output_file(&mut command, &output_path, msvc, compiler.is_like_clang());
     }
 
@@ -159,40 +159,24 @@ fn command_add_output_file(command: &mut Command, output_path: &PathBuf, msvc: b
     }
 }
 
-fn get_env_flags(variables: &HashMap<String, String>, env_name: &str) -> Vec<String> {
-    variables
-        .get(env_name)
-        .map(|e| e.to_string())
-        .ok_or_else(|| env::var(env_name))
-        .unwrap_or_default()
-        .split_ascii_whitespace()
-        .map(|slice| slice.to_string())
-        .collect()
-}
+fn command_add_compiler_flags(command: &mut Command, variables: &HashMap<String, String>) {
+    let get_env_flags = |env_name: &str| -> Vec<String> {
+        variables
+            .get(env_name)
+            .map(|e| e.to_string())
+            .ok_or_else(|| env::var(env_name))
+            .unwrap_or_default()
+            .split_ascii_whitespace()
+            .map(|slice| slice.to_string())
+            .collect()
+    };
 
-fn command_add_compiler_flags(
-    command: &mut Command,
-    variables: &HashMap<String, String>,
-    msvc: bool,
-) {
-    command.args(get_env_flags(variables, "CFLAGS"));
-    command.args(get_env_flags(variables, "CPPFLAGS"));
-    command.args(get_env_flags(variables, "CXXFLAGS"));
+    command.args(get_env_flags("CFLAGS"));
+    command.args(get_env_flags("CPPFLAGS"));
+    command.args(get_env_flags("CXXFLAGS"));
 
-    if !msvc {
-        for linker_argument in get_env_flags(variables, "LDFLAGS") {
-            command.arg(format!("-Wl,{}", linker_argument));
-        }
-    }
-}
-
-fn command_add_linker_flags_msvc(command: &mut Command, variables: &HashMap<String, String>) {
-    let linker_flags = get_env_flags(variables, "LDFLAGS");
-    if !linker_flags.is_empty() {
-        command.arg("/link");
-        for linker_argument in linker_flags {
-            command.arg(linker_argument);
-        }
+    for linker_argument in get_env_flags("LDFLAGS") {
+        command.arg(format!("-Wl,{}", linker_argument));
     }
 }
 
@@ -200,7 +184,6 @@ fn command_add_linker_flags_msvc(command: &mut Command, variables: &HashMap<Stri
 mod tests {
     use super::*;
     use crate::predicates::*;
-    use std::env::{remove_var, set_var};
 
     #[test]
     fn test_run_c() {
@@ -219,62 +202,6 @@ mod tests {
         .unwrap()
         .success()
         .stdout(predicate::eq("Hello, World!\n").normalize());
-    }
-    #[test]
-    fn test_run_c_ldflags() {
-        let host = target_lexicon::HOST.to_string();
-        let msvc = host.contains("msvc");
-        if msvc {
-            // Use a linker flag to set the stack size and run a program that
-            // outputs its stack size. If the linker flags aren't set
-            // properly, the program will output the wrong value.
-
-            set_var("INLINE_C_RS_LDFLAGS", "/STACK:0x40000");
-            run(
-                Language::C,
-                r#"
-                #include <Windows.h>
-
-                #include <stdio.h>
-
-                int main() {
-                    ULONG_PTR stack_low_limit, stack_high_limit;
-                    GetCurrentThreadStackLimits(&stack_low_limit, &stack_high_limit);
-                    printf("%#llx", stack_high_limit-stack_low_limit);
-
-                    return 0;
-                }
-            "#,
-            )
-            .unwrap()
-            .success()
-            .stdout(predicate::eq("0x40000").normalize());
-
-            remove_var("INLINE_C_RS_LDFLAGS");
-        } else {
-            // Introduces a symbol using linker flags and builds a program that
-            // ODR uses that symbol. If the linker flags aren't set properly,
-            // there will be a linker error.
-
-            set_var("INLINE_C_RS_LDFLAGS", "--defsym MY_SYMBOL=0x0");
-            run(
-                Language::C,
-                r#"
-                #include <stdio.h>
-
-                extern void* MY_SYMBOL;
-
-                int main() {
-                    printf("%p", MY_SYMBOL);
-                    return 0;
-                }
-            "#,
-            )
-            .unwrap()
-            .success();
-
-            remove_var("INLINE_C_RS_LDFLAGS");
-        }
     }
 
     #[test]
